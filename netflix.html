@@ -1,0 +1,515 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Home | Netflix</title>
+    <style>
+   * {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Netflix Sans', sans-serif;
+  background-color: #111;
+  overflow-x: hidden;
+}
+
+::-webkit-scrollbar {
+  width: 7px;
+  background-color: #111;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #ff4500;
+  border-radius: 10px;
+}
+
+.nav {
+  position: fixed;
+  top: 0;
+  padding: 20px 40px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 1;
+  transition: background-color 0.5s ease-in-out;
+}
+
+.nav.active {
+  background-color: #1e1e1e;
+}
+
+.nav__left {
+  margin-left: 10px;
+}
+
+.nav_logo {
+  width: 180px;
+}
+
+.nav__right {
+  position: fixed;
+  right: 30px;
+  display: flex;
+  margin-right: 10px;
+}
+
+.nav_avatar {
+  width: 40px;
+}
+
+#banner {
+  color: white;
+  object-fit: contain;
+  height: 644px;
+  background-position: center center;
+  background-size: cover;
+  position: relative;
+  overflow: hidden;
+}
+
+#banner__contents {
+  margin-left: 70px;
+  padding-top: 340px;
+  height: 190px;
+  animation: fadeInUp 1s ease;
+}
+
+#banner__title {
+  font-size: 3rem;
+  font-weight: 800;
+  padding-bottom: 0.3rem;
+  color: #ff4500;
+}
+
+#banner__description {
+  width: 45rem;
+  line-height: 1.5;
+  padding-top: 1rem;
+  font-size: 0.9rem;
+  max-width: 360px;
+  height: 80px;
+  color: #b0b0b0;
+}
+
+#banner__button {
+  cursor: pointer;
+  color: white;
+  outline: none;
+  border: none;
+  font-weight: 700;
+  border-radius: 0.2vw;
+  padding: 0.5rem 2rem;
+  margin: 1rem 1rem 1rem 0;
+  background: linear-gradient(45deg, #ffdd00, #fa5801);
+  transition: background 0.3s;
+}
+
+#banner__button:hover {
+  background: linear-gradient(45deg,#fa5801,#ff8c00, #f81414);
+}
+
+#banner__fadeBottom {
+  height: 7.4rem;
+  background: linear-gradient(180deg, transparent, #111);
+}
+
+.row {
+  margin-left: 20px;
+  color: white;
+}
+
+.row__poster {
+  object-fit: contain;
+  width: 100%;
+  max-height: 120px;
+  margin-right: 10px;
+  transition: transform 500ms;
+}
+
+.row__posters::-webkit-scrollbar {
+  display: none;
+}
+
+.row__posters {
+  display: flex;
+  overflow-y: hidden;
+  overflow-x: scroll;
+  padding: 20px;
+}
+
+.row__poster:hover {
+  transform: scale(1.08);
+}
+
+.row__posterLarge,
+.row__posterLarge1,
+.row__posterLarge2 {
+  object-fit: contain;
+  width: 100%;
+  max-height: 250px;
+  margin-right: 10px;
+  transition: transform 500ms;
+}
+
+.row__posterLarge:hover,
+.row__posterLarge1:hover,
+.row__posterLarge2:hover {
+  transform: scale(1.09);
+  opacity: 1;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+    </style>
+     
+  </head>
+  <body>
+    <!-- navbar -->
+    <div class="nav">
+      <div class="nav__left">
+        <a href="index.html">
+        <img class="nav_logo" src="./images/logo.png" alt=""></a>
+      </div>
+      <div class="nav__right">
+        <img src="./images/N2.jpg" class="nav_avatar" alt="">
+      </div>
+    </div>
+
+    <!-- banner -->
+    <header id="banner">
+      <div id="banner__contents">
+        <h1 id="banner__title"></h1>
+        <div id="banner__buttons">
+        <button id="banner__button">Play</button>
+        <button id="banner__button">My List</button>
+      </div>
+      <p id="banner__description"></p>
+      </div>
+      <div id="banner__fadeBottom"></div>
+    </header>
+
+    <!-- row -->
+    <div id="headrow">
+      <div class="row">
+        <h2 class="row__title"></h2>
+        <div class="row__posters"> </div>
+      </div>
+    </div>
+
+    <script>
+      window.addEventListener("scroll",function(){
+
+        var nav = document.querySelector(".nav");
+        nav.classList.toggle("active", window.scrollY > 0);
+      }) 
+    </script> 
+    <script>
+      // api key  from TMDB
+
+const api = "api_key=0d7fcb538472b4a248392fdaf9ae8532";
+
+// base url of the site
+const base_url = "https://api.themoviedb.org/3";
+
+const banner_url = "https://image.tmdb.org/t/p/original";
+const img_url = "https://image.tmdb.org/t/p/w300"; // You can change "w185" to your preferred size
+
+
+// requests for movies data
+
+const requests = {
+
+  fetchTrending: `${base_url}/trending/all/week?${api}&language=en-US`,
+  fetchNetflixOrignals: `${base_url}/discover/tv?${api}&with_networks=213`,
+  fetchActionMovies: `${base_url}/discover/movie?${api}&with_genres=28`,
+  fetchComedyMovies: `${base_url}/discover/movie?${api}&with_genres=35`,
+  fetchHorrorMovies: `${base_url}/discover/movie?${api}&with_genres=27`,
+  fetchRomanceMovies: `${base_url}/discover/movie?${api}&with_genres=10749`,
+  fetchDocumentaries: `${base_url}/discover/movie?${api}&with_genres=99`,
+};
+// used to truncate the string
+
+function truncate(str, n) {
+  return str?.length > n ? str.substr(0, n - 1) + "..." : str;
+}
+// banner
+
+fetch(requests.fetchNetflixOrignals)
+  .then((res) => res.json())
+
+
+
+  .then((data) => {
+    
+    // every refresh the movie will be change
+
+
+    const setMovie =
+      data.results[Math.floor(Math.random() * data.results.length - 1)];
+
+   
+
+    var banner = document.getElementById("banner");
+    var banner_title = document.getElementById("banner__title");
+    var banner__desc = document.getElementById("banner__description");
+
+
+    banner.style.backgroundImage =
+      "url(" + banner_url + setMovie.backdrop_path + ")";
+    banner__desc.innerText = truncate(setMovie.overview, 150);
+    banner_title.innerText = setMovie.name;
+  });
+
+// movies rows
+fetch(requests.fetchNetflixOrignals)
+  .then((res) => res.json())
+
+
+  .then((data) => {
+    const headrow = document.getElementById("headrow");
+    const row = document.createElement("div");
+
+    row.className = "row";
+    row.classList.add("netflixrow");
+
+    headrow.appendChild(row);
+
+
+    const title = document.createElement("h2");
+
+
+    title.className = "row__title";
+    title.innerText = "NETFLIX ORIGINALS";
+
+
+    row.appendChild(title);
+
+    const row_posters = document.createElement("div");
+    row_posters.className = "row__posters";
+    row.appendChild(row_posters);
+
+
+
+    data.results.forEach((movie) => {
+
+      const poster = document.createElement("img");
+      poster.className = "row__posterLarge";
+
+      var s = movie.name.replace(/\s+/g, "");
+
+      poster.id = s;
+      poster.src = img_url + movie.poster_path;
+      row_posters.appendChild(poster);
+    });
+  });
+
+//trending
+
+// top rated
+fetch(requests.fetchTrending)
+  .then((res) => res.json())
+
+
+  .then((data) => {
+    const headrow = document.getElementById("headrow");
+    const row = document.createElement("div");
+    row.className = "row";
+
+    headrow.appendChild(row);
+
+
+    const title = document.createElement("h2");
+    title.className = "row__title";
+    title.innerText = "Top Rated";
+    row.appendChild(title);
+
+
+    const row_posters = document.createElement("div");
+    row_posters.className = "row__posters";
+    row.appendChild(row_posters);
+    
+    
+    data.results.forEach((movie) => {
+      
+      const poster = document.createElement("img");
+      poster.className = "row__posterLarge";
+      var s2 = movie.id;
+
+      poster.id = s2;
+      poster.src = img_url + movie.poster_path;
+      row_posters.appendChild(poster);
+    });
+  });
+
+// action
+fetch(requests.fetchActionMovies)
+  .then((res) => res.json())
+
+
+  .then((data) => {
+    const headrow = document.getElementById("headrow");
+    const row = document.createElement("div");
+    row.className = "row";
+    headrow.appendChild(row);
+
+
+    const title = document.createElement("h2");
+    title.className = "row__title";
+    title.innerText = "Action Movies";
+    row.appendChild(title);
+
+
+    const row_posters = document.createElement("div");
+    row_posters.className = "row__posters";
+    row.appendChild(row_posters);
+
+    
+    data.results.forEach((movie) => {
+    
+      const poster = document.createElement("img");
+      poster.className = "row__poster";
+      var s2 = movie.id;
+      poster.id = s2;
+      poster.src = img_url + movie.backdrop_path;
+      row_posters.appendChild(poster);
+    });
+  });
+// comedy
+fetch(requests.fetchComedyMovies)
+  .then((res) => res.json())
+
+  .then((data) => {
+    const headrow = document.getElementById("headrow");
+    const row = document.createElement("div");
+    row.className = "row";
+    headrow.appendChild(row);
+
+
+    const title = document.createElement("h2");
+    title.className = "row__title";
+    title.innerText = "Comedy Movies";
+    row.appendChild(title);
+
+
+    const row_posters = document.createElement("div");
+    row_posters.className = "row__posters";
+    row.appendChild(row_posters);
+
+
+    data.results.forEach((movie) => {
+      console.log(movie);
+      const poster = document.createElement("img");
+      poster.className = "row__poster";
+      var s2 = movie.id;
+      poster.id = s2;
+      poster.src = img_url + movie.backdrop_path;
+      row_posters.appendChild(poster);
+    });
+  });
+// Horror
+fetch(requests.fetchHorrorMovies)
+  .then((res) => res.json())
+
+  .then((data) => {
+    const headrow = document.getElementById("headrow");
+    const row = document.createElement("div");
+    row.className = "row";
+    headrow.appendChild(row);
+
+    const title = document.createElement("h2");
+    title.className = "row__title";
+    title.innerText = "Horror Movies";
+    row.appendChild(title);
+
+    const row_posters = document.createElement("div");
+    row_posters.className = "row__posters";
+    row.appendChild(row_posters);
+
+    data.results.forEach((movie) => {
+      console.log(movie);
+      const poster = document.createElement("img");
+      poster.className = "row__poster";
+      var s2 = movie.id;
+      poster.id = s2;
+      poster.src = img_url + movie.backdrop_path;
+      row_posters.appendChild(poster);
+    });
+  });
+// Romance
+fetch(requests.fetchRomanceMovies)
+  .then((res) => res.json())
+
+  .then((data) => {
+    const headrow = document.getElementById("headrow");
+    const row = document.createElement("div");
+    row.className = "row";
+    headrow.appendChild(row);
+
+    const title = document.createElement("h2");
+    title.className = "row__title";
+    title.innerText = "Romance Movies";
+    row.appendChild(title);
+
+    const row_posters = document.createElement("div");
+    row_posters.className = "row__posters";
+    row.appendChild(row_posters);
+
+    data.results.forEach((movie) => {
+      console.log(movie);
+      const poster = document.createElement("img");
+      poster.className = "row__poster";
+      var s2 = movie.id;
+      poster.id = s2;
+      poster.src = img_url + movie.backdrop_path;
+      row_posters.appendChild(poster);
+    });
+  });
+// documentry
+fetch(requests.fetchDocumentaries)
+  .then((res) => res.json())
+
+  .then((data) => {
+    const headrow = document.getElementById("headrow");
+    const row = document.createElement("div");
+    row.className = "row";
+
+    headrow.appendChild(row);
+    const title = document.createElement("h2");
+    title.className = "row__title";
+    title.innerText = "Documentaries"
+    ;
+    row.appendChild(title);
+
+    const row_posters = document.createElement("div");
+    row_posters.className = "row__posters";
+    row.appendChild(row_posters);
+    
+    data.results.forEach((movie) => {
+      console.log(movie);
+      const poster = document.createElement("img");
+      poster.className = "row__poster";
+      var s2 = movie.id;
+      poster.id = s2;
+      poster.src = img_url + movie.backdrop_path;
+      row_posters.appendChild(poster);
+    });
+  });
+
+    </script>
+  </body>
+</html>
